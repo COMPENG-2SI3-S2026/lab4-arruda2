@@ -6,12 +6,15 @@ using namespace std;
 objPosBST::objPosBST()
 {
     // Constructor (Check Lecture Notes for Implementation, Simple)
+    root = nullptr;
 }
 
 objPosBST::~objPosBST()
 {
     // Destructor
     // Invoke delete tree, then set root to NULL
+    deleteTree();
+    root = nullptr;
 }
 
 void objPosBST::deleteTree(const TNode* thisNode)
@@ -20,6 +23,17 @@ void objPosBST::deleteTree(const TNode* thisNode)
 
     // Question from Class - Which Traversal Order should you use for this method?
     //   WARNING - using the wrong one will result in potential heap error.
+
+    // Traversal order to be used: Post-Order
+    // - Ensures that we have a path to all child nodes before deleting root nodes and making them inaccessible
+
+    if(thisNode != nullptr) {
+        deleteTree(thisNode->left);
+        deleteTree(thisNode->right);
+        delete thisNode;
+        thisNode = nullptr;
+    }
+
 }
 
 // Public Interface, Implemented
@@ -33,6 +47,7 @@ bool objPosBST::isEmptyTree() const
 {
     // Check if tree is empty
     //  Really simple, think about how.
+    return (root == nullptr);
 }
 
 
@@ -49,6 +64,36 @@ bool objPosBST::isLeaf(const objPos &thisPos, const TNode* thisNode) const
     //      - If equal, check if the node is a leaf node
 
     // Remember, leaf nodes do not have children nodes
+
+    // Debug print statement
+    cout << "Leaf check. thisNode = " << thisNode;
+    
+    if(thisNode != nullptr) {
+        cout << ", thisNode->left = " << thisNode->left << ", thisNode->right = " << thisNode->right << endl;
+    }
+
+    if(thisNode == nullptr) {
+        cout << "thisNode is null. Returning false." << endl;
+        return false;
+    } else if(thisNode->data.getPF() == thisPos.getPF()) {
+        // Node found, now check if it is a leaf or not
+        cout << "Data is a match! Now check if node is a leaf." << endl;
+        cout << "Boolean result: " << (thisNode->left == nullptr && thisNode->right == nullptr) << endl;
+        return (thisNode->left == nullptr && thisNode->right == nullptr);
+    } else if(thisPos.getPF() < thisNode->data.getPF()) {
+        cout << "Recursively going left. thisPos.getPF() = " << thisPos.getPF() << ", and thisNode->data.getPF() = " << thisNode->data.getPF() << endl;
+        return isLeaf(thisPos, thisNode->left);    
+    } else if(thisPos.getPF() > thisNode->data.getPF()) {
+        cout << "Recursively going right." << endl;
+        return isLeaf(thisPos, thisNode->right);
+    } else {
+        // Do nothing; if item not in tree, recursive call will lead to thisNode == nullptr, and thus return false
+        // Assume if all fails, not in tree, so return false regardless
+        cout << "All other statements failed." << endl;
+        return false;
+    }
+
+
 }
 
 bool objPosBST::isLeaf(const objPos &thisPos) const
@@ -65,6 +110,16 @@ void objPosBST::printTree(const TNode* thisNode) const  // private recursive
     // e.g.  N30 P25 etc.
 
     // DO NOT use printObjPos() as it will mess up the game display.
+    
+    if(thisNode != nullptr) {
+        
+        cout << "Now in printTree function. thisNode = " << thisNode << ", thisNode->left = " << thisNode->left << ", thisNode->right = " << thisNode->right << endl;
+
+        printTree(thisNode->left);
+        cout << thisNode->data.getPF() << thisNode->data.getNum() << " ";
+        printTree(thisNode->right);
+    }
+
 }
 
 void objPosBST::printTree() const  // public interface
@@ -88,6 +143,27 @@ int objPosBST::getHeight(const TNode* thisNode) const
     //    the returned heights.
 
     // 3. Compare the two returned heights, and return the larger one.
+
+    if(thisNode == nullptr || (thisNode->left == nullptr && thisNode->right == nullptr)) {
+        return 0;
+
+        // Returns 0 if thisNode is null, or if the node is a leaf node (thus accounts for height = n - 1, just inverse to the definition of removing the root)
+
+    } else {
+
+        int leftHeight = getHeight(thisNode->left);
+        int rightHeight = getHeight(thisNode->right);
+
+        return (leftHeight > rightHeight)? leftHeight + 1 : rightHeight + 1;
+        // Recursively says that if leftHeight is larger, return leftHeight+1, and rightHeight+1 otherwise
+        // --> rightHeight+1 returned when rightHeight > leftHeight, or heights are equal (works since either value is the same)
+
+        // Since the base case is defined first, when the leaf nodes are evaluated, leftHeight = rightHeight = 0
+        // Therefore, it returns a height of 1 by lH+1 or rH+1 for the parent nodes
+        // Recursively doing this allows for the tree's height to be found from the bottom up
+        // Performing the comparison ensures only the maximum height is taken as we go up the tree to the root
+
+    }
 }
 
 void objPosBST::printCurrentLevel(const TNode* thisNode, const int level) const
@@ -104,6 +180,39 @@ void objPosBST::printCurrentLevel(const TNode* thisNode, const int level) const
 
     // You may add other character formatting features to make the tree more readable.
     // (you will be asked to demo this feature during the lab demo!!)
+
+    // Goal is to go through the tree down from the given node, decreasing the level as we go until that level = 1
+    // The level decrement and tree traversal should be synced up such that the desired level is hit
+
+    // Out-of-bounds handling
+    if(thisNode == nullptr) {
+        cout << "1) Check if thisNode == nullptr" << endl;
+        return;
+    }
+
+    // Base case handling
+    // level+1 sent as argument to handle expectation that the root is at level 0
+    else if(level+1 == 1) {
+        cout << "2) Check if level+1 == 1" << endl;
+        cout << "2a) At desired level, ready to print!" << endl;
+        cout << thisNode->data.getPF() << endl;
+    } 
+    else if(isLeaf(thisNode->data)) {
+        cout << "3) Check if node isLeaf" << endl;
+        cout << "3a) Node is a leaf!" << endl;
+        return; // Is this condition necessary, or does the post-order design handle it by default?
+    }
+    
+    else {
+        
+        cout << "4) Begin recursive function call. thisNode = " << thisNode << ", thisNode->left = " << thisNode->left << ", thisNode->right = " << thisNode->right << endl;
+        cout << "4a) Check left with level-1 = " << level-1 << ", and thisNode->left = " << thisNode->left << endl;
+        printCurrentLevel(thisNode->left, level-1);
+        cout << "4b) Left check finished, now check right with level-1 = " << level-1 << ", and thisNode->right = " << thisNode->right << endl;
+        printCurrentLevel(thisNode->right, level-1);
+        cout << "4c) Right check finished" << endl;
+    }
+
 }
 
 // Public Interface.
@@ -116,6 +225,28 @@ void objPosBST::printTreeLevel() const
 
     // You may add other character formatting features to make the tree more readable.
     // (you will be asked to demo this feature during the lab demo!!)
+
+    // Design:
+    // - Each character will be assigned a "block", with each block having 3 spaces to allow for even spacing when considering negative values
+    // - Minimum character space between these blocks will be 3
+    // - Root will be in the middle of the space between the blocks
+    // - Space between blocks will increase based on the number of nodes total
+    // --> Will ensure there is enough space to display all nodes correctly
+    // --> Will ensure that if there are not a lot of nodes, the spacing isn't unnecessarily large
+
+    // For this function specifically:
+    // - Check height and add spaces accordingly to align levels to be centred over each other
+    // - Run printCurrentLevel
+
+    cout << "Expected tree using printTree function: " << endl;
+    printTree(root);
+
+    for(int i = 0; i <= getHeight(root); i++) {
+        cout << "=== For loop, level " << i << " ===" << endl;
+        printCurrentLevel(root, i);
+        cout << endl;
+    }
+
 }
 
 bool objPosBST::isInTree(const objPos& thisPos, const TNode* thisNode) const
@@ -129,6 +260,21 @@ bool objPosBST::isInTree(const objPos& thisPos, const TNode* thisNode) const
     //    against the Prefix of thisPos
     //      - If not equal, follow the BST search rules
     //      - If equal, return true
+
+    if(thisNode == nullptr) {
+        return false;
+    } else if(thisNode->data.getPF() == thisPos.getPF()) {
+        return true;
+    } else if(thisPos.getPF() < thisNode->data.getPF()) {
+        return isInTree(thisPos, thisNode->left);    
+    } else if(thisPos.getPF() > thisNode->data.getPF()) {
+        return isInTree(thisPos, thisNode->right);
+    } else {
+        // Do nothing; if item not in tree, recursive call will lead to thisNode == nullptr, and thus return false
+        // Assume if all fails, not in tree, so return false regardless
+        return false;
+    }
+
 }
 
 // Public Interface, Implemented
@@ -149,6 +295,28 @@ void objPosBST::insert(const objPos &thisPos, TNode* &thisNode)
     //   If the node is already in the tree (i.e. Prefix match found)
     //   Add the number member of thisPos to the number member of the objPos data at the node
     //   (DO NOT JUST IGNORE.  ADD NUMBERS!!)
+
+    // DEBUG STATEMENT
+    //if(thisNode != nullptr) {
+    //    cout << "Insert " << thisPos.getPF() << " into the BST, compared to " << thisNode->data.getPF() << endl;
+    //}
+
+    if(thisNode == nullptr) {
+        // We are now at a blank space, and can insert the new node
+        //cout << "Insert node into new space" << endl;
+        thisNode = new TNode(thisPos);
+    } else if(thisPos.getPF() < thisNode->data.getPF()) {
+        //cout << thisPos.getPF() << " is < " << thisNode->data.getPF() << endl;
+        insert(thisPos, thisNode->left);    
+    } else if(thisPos.getPF() > thisNode->data.getPF()) {
+        //cout << thisPos.getPF() << " is > " << thisNode->data.getPF() << endl;
+        insert(thisPos, thisNode->right);
+    } else {
+        // Node is already in the tree (prefix match) given all other cases failed
+        //cout << "Node already in tree" << endl;
+        thisNode->data.setNum(thisPos.getNum() + thisNode->data.getNum());
+    }
+
 }
 
 // Public Interface, Implemented
@@ -165,6 +333,16 @@ const TNode* objPosBST::findMin(const TNode* thisNode) const
     // Used as part of remove() algorithm
 
     // Check Lecture Notes for implementation
+
+    if(thisNode == nullptr) {
+        return nullptr;
+    } else {
+        while(thisNode->left != nullptr) {
+            thisNode = thisNode->left;
+        }
+        return thisNode;
+    }
+
 }
 
 
@@ -179,6 +357,36 @@ void objPosBST::remove(const objPos &thisPos, TNode* &thisNode)
 
     // Case 3 - Delete the node with 2 children
     //   You can use either methods (check lecture notes)
+
+    if(thisNode == nullptr) {
+        return;
+
+        // Note: This initially also ran for the condition "|| !isInTree(thisPos)"
+        // However, this would have led to unnecessary recursive calls throughout the program runtime
+        // There are enough if statements in this function to cover all cases, so if the item is not in the tree, it will simply move thisNode to nullptr beyond a leaf and return
+    }
+
+    else if(thisPos.getPF() < thisNode->data.getPF()) {
+        remove(thisPos, thisNode->left);
+    } else if(thisPos.getPF() > thisNode->data.getPF()) {
+        remove(thisPos, thisNode->right);
+    }
+    
+    // If above two statements fail, thisPos prefix must == thisNode, and so we can now begin the removal methods
+    
+    else if(thisNode->left != nullptr && thisNode->right != nullptr) {
+        // Case 3 - Delete Node with 2 children
+        // Apply Method 1, using findMin
+        thisNode->data = findMin(thisNode->right)->data;
+        remove(thisNode->data, thisNode->right);
+    } else {
+        // Cases 1 and 2
+        // We are at a node that is either a leaf or has 1 child
+        TNode* oldNode = thisNode;
+        thisNode = (thisNode->left != nullptr)? thisNode->left : thisNode->right;      // Check left and right; set thisNode to whichever isn't null!
+        delete oldNode;
+    }
+
 }
 
 // Public Interface, Implemented
@@ -202,6 +410,16 @@ bool objPosBST::findGreater(const int numThreshold, const TNode* thisNode) const
     //     Otherwise, return false.
 
     // HINT:  If you do this right, the algorithm is less than 10 lines.
+
+    if(thisNode == nullptr) {
+        return false;
+    }
+
+    // Perform post-order traversal!
+    findGreater(numThreshold, thisNode->left);
+    findGreater(numThreshold, thisNode->right);
+    return (thisNode->data.getNum() > numThreshold)? true : false;
+
 }
 
 bool objPosBST::findGreater(const int numThreshold) const
