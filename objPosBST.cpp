@@ -65,31 +65,18 @@ bool objPosBST::isLeaf(const objPos &thisPos, const TNode* thisNode) const
 
     // Remember, leaf nodes do not have children nodes
 
-    // Debug print statement
-    cout << "Leaf check. thisNode = " << thisNode;
-    
-    if(thisNode != nullptr) {
-        cout << ", thisNode->left = " << thisNode->left << ", thisNode->right = " << thisNode->right << endl;
-    }
-
     if(thisNode == nullptr) {
-        cout << "thisNode is null. Returning false." << endl;
         return false;
     } else if(thisNode->data.getPF() == thisPos.getPF()) {
         // Node found, now check if it is a leaf or not
-        cout << "Data is a match! Now check if node is a leaf." << endl;
-        cout << "Boolean result: " << (thisNode->left == nullptr && thisNode->right == nullptr) << endl;
         return (thisNode->left == nullptr && thisNode->right == nullptr);
     } else if(thisPos.getPF() < thisNode->data.getPF()) {
-        cout << "Recursively going left. thisPos.getPF() = " << thisPos.getPF() << ", and thisNode->data.getPF() = " << thisNode->data.getPF() << endl;
         return isLeaf(thisPos, thisNode->left);    
     } else if(thisPos.getPF() > thisNode->data.getPF()) {
-        cout << "Recursively going right." << endl;
         return isLeaf(thisPos, thisNode->right);
     } else {
         // Do nothing; if item not in tree, recursive call will lead to thisNode == nullptr, and thus return false
         // Assume if all fails, not in tree, so return false regardless
-        cout << "All other statements failed." << endl;
         return false;
     }
 
@@ -112,9 +99,6 @@ void objPosBST::printTree(const TNode* thisNode) const  // private recursive
     // DO NOT use printObjPos() as it will mess up the game display.
     
     if(thisNode != nullptr) {
-        
-        cout << "Now in printTree function. thisNode = " << thisNode << ", thisNode->left = " << thisNode->left << ", thisNode->right = " << thisNode->right << endl;
-
         printTree(thisNode->left);
         cout << thisNode->data.getPF() << thisNode->data.getNum() << " ";
         printTree(thisNode->right);
@@ -186,31 +170,21 @@ void objPosBST::printCurrentLevel(const TNode* thisNode, const int level) const
 
     // Out-of-bounds handling
     if(thisNode == nullptr) {
-        cout << "1) Check if thisNode == nullptr" << endl;
         return;
     }
 
     // Base case handling
     // level+1 sent as argument to handle expectation that the root is at level 0
     else if(level+1 == 1) {
-        cout << "2) Check if level+1 == 1" << endl;
-        cout << "2a) At desired level, ready to print!" << endl;
-        cout << thisNode->data.getPF() << endl;
+        cout << thisNode->data.getPF();
     } 
     else if(isLeaf(thisNode->data)) {
-        cout << "3) Check if node isLeaf" << endl;
-        cout << "3a) Node is a leaf!" << endl;
         return; // Is this condition necessary, or does the post-order design handle it by default?
     }
     
     else {
-        
-        cout << "4) Begin recursive function call. thisNode = " << thisNode << ", thisNode->left = " << thisNode->left << ", thisNode->right = " << thisNode->right << endl;
-        cout << "4a) Check left with level-1 = " << level-1 << ", and thisNode->left = " << thisNode->left << endl;
         printCurrentLevel(thisNode->left, level-1);
-        cout << "4b) Left check finished, now check right with level-1 = " << level-1 << ", and thisNode->right = " << thisNode->right << endl;
         printCurrentLevel(thisNode->right, level-1);
-        cout << "4c) Right check finished" << endl;
     }
 
 }
@@ -238,11 +212,7 @@ void objPosBST::printTreeLevel() const
     // - Check height and add spaces accordingly to align levels to be centred over each other
     // - Run printCurrentLevel
 
-    cout << "Expected tree using printTree function: " << endl;
-    printTree(root);
-
     for(int i = 0; i <= getHeight(root); i++) {
-        cout << "=== For loop, level " << i << " ===" << endl;
         printCurrentLevel(root, i);
         cout << endl;
     }
@@ -410,15 +380,18 @@ bool objPosBST::findGreater(const int numThreshold, const TNode* thisNode) const
     //     Otherwise, return false.
 
     // HINT:  If you do this right, the algorithm is less than 10 lines.
-
+    
     if(thisNode == nullptr) {
         return false;
     }
 
     // Perform post-order traversal!
-    findGreater(numThreshold, thisNode->left);
-    findGreater(numThreshold, thisNode->right);
-    return (thisNode->data.getNum() > numThreshold)? true : false;
+    bool leftTree = findGreater(numThreshold, thisNode->left);
+    bool rightTree = findGreater(numThreshold, thisNode->right);
+    
+    // If neither left nor right subtrees return true, check current node
+    // Otherwise, we have found an element greater than numThreshold, and need to return true continuously back to the original recursive call
+    return (!leftTree && !rightTree)? thisNode->data.getNum() > numThreshold : true;
 
 }
 
