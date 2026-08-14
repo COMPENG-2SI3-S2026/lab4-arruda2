@@ -176,10 +176,17 @@ void objPosBST::printCurrentLevel(const TNode* thisNode, const int level) const
     // Base case handling
     // level+1 sent as argument to handle expectation that the root is at level 0
     else if(level+1 == 1) {
+        for(int i = 1; i <= 4; i++) {
+            cout << " ";
+        }
         cout << thisNode->data.getPF();
+        if(thisNode->left != nullptr && thisNode->right != nullptr) {
+            cout << "     ";
+            // Print more spaces based on whether or not there are child nodes!
+        }
     } 
     else if(isLeaf(thisNode->data)) {
-        return; // Is this condition necessary, or does the post-order design handle it by default?
+        return;
     }
     
     else {
@@ -201,10 +208,7 @@ void objPosBST::printTreeLevel() const
     // (you will be asked to demo this feature during the lab demo!!)
 
     // Design:
-    // - Each character will be assigned a "block", with each block having 3 spaces to allow for even spacing when considering negative values
-    // - Minimum character space between these blocks will be 3
-    // - Root will be in the middle of the space between the blocks
-    // - Space between blocks will increase based on the number of nodes total
+    // - Indent will increase based on the number of nodes total
     // --> Will ensure there is enough space to display all nodes correctly
     // --> Will ensure that if there are not a lot of nodes, the spacing isn't unnecessarily large
 
@@ -212,7 +216,14 @@ void objPosBST::printTreeLevel() const
     // - Check height and add spaces accordingly to align levels to be centred over each other
     // - Run printCurrentLevel
 
+    // Idea:
+    // - If child is not a leaf, increase gap by 1
+    // - Else, print underneath shifted by 1
+
     for(int i = 0; i <= getHeight(root); i++) {
+        for(int j = 0; j <= (3*getHeight(root)+1) - 3*i; j++) {
+            cout << " ";
+        }
         printCurrentLevel(root, i);
         cout << endl;
     }
@@ -266,24 +277,16 @@ void objPosBST::insert(const objPos &thisPos, TNode* &thisNode)
     //   Add the number member of thisPos to the number member of the objPos data at the node
     //   (DO NOT JUST IGNORE.  ADD NUMBERS!!)
 
-    // DEBUG STATEMENT
-    //if(thisNode != nullptr) {
-    //    cout << "Insert " << thisPos.getPF() << " into the BST, compared to " << thisNode->data.getPF() << endl;
-    //}
 
     if(thisNode == nullptr) {
         // We are now at a blank space, and can insert the new node
-        //cout << "Insert node into new space" << endl;
         thisNode = new TNode(thisPos);
     } else if(thisPos.getPF() < thisNode->data.getPF()) {
-        //cout << thisPos.getPF() << " is < " << thisNode->data.getPF() << endl;
         insert(thisPos, thisNode->left);    
     } else if(thisPos.getPF() > thisNode->data.getPF()) {
-        //cout << thisPos.getPF() << " is > " << thisNode->data.getPF() << endl;
         insert(thisPos, thisNode->right);
     } else {
         // Node is already in the tree (prefix match) given all other cases failed
-        //cout << "Node already in tree" << endl;
         thisNode->data.setNum(thisPos.getNum() + thisNode->data.getNum());
     }
 
